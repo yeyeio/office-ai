@@ -1,0 +1,26 @@
+{
+  "name": "office-ai-assistant",
+  "version": "1.0.0",
+  "description": "Microsoft Word AI Assistant Add-in with BYOK, Custom Endpoint & OpenUI",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@openuidev/react-lang": "^1.0.0",
+    "@openuidev/react-ui": "^0.18.0",
+    "clsx": "^2.1.1",
+    "highlight.js": "^11.12.0",
+    "lucide-react": "^0.469.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.2",
+    "zustand": "^4.5.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.4"
+  }
+}
