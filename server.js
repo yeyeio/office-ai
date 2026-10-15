@@ -30,11 +30,36 @@ function requestHandler(req, res) {
     return;
   }
 
-  let filePath = path.join(__dirname, req.url === '/' ? 'taskpane.html' : req.url.split('?')[0]);
+  let rawUrl = req.url === '/' ? '/taskpane.html' : req.url.split('?')[0];
+  let subPath = path.normalize(rawUrl).replace(/^(\.\.[\/\\])+/, '').replace(/^[\\\/]+/, '');
 
-  // Security check to prevent directory traversal
-  if (!filePath.startsWith(__dirname)) {
-    res.writeHead(403);
+  // Strictly disallow access to sensitive directories, private keys, and config files
+  const forbiddenPatterns = [/certs/i, /^\.git/i, /^\.kilo/i, /package.*\.json$/i, /server\.js$/i, /\.env/i];
+  if (forbiddenPatterns.some(pat => pat.test(subPath))) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    res.end('Forbidden');
+    return;
+  }
+
+  // Determine allowed source: dist first, then public assets/manifest.xml only
+  const distDir = path.join(__dirname, 'dist');
+  let filePath = path.join(distDir, subPath);
+
+  // If not found in dist, check if it's an explicitly allowed root asset (manifest.xml, assets/*)
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    if (subPath === 'manifest.xml' || subPath.startsWith('assets' + path.sep) || subPath.startsWith('assets/')) {
+      filePath = path.join(__dirname, subPath);
+    } else {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not Found: ' + req.url);
+      return;
+    }
+  }
+
+  // Directory traversal validation
+  const relFromRoot = path.relative(__dirname, filePath);
+  if (relFromRoot.startsWith('..') || path.isAbsolute(relFromRoot)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
     return;
   }
